@@ -70,7 +70,7 @@ public class Main {
 			
 				System.out.println("An error occured when getting infos from web server. The web server response is: " + resp.toString());
 			
-		}	
+		   }	
 		
 	}
 	
