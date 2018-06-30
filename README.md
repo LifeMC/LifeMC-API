@@ -41,7 +41,7 @@ public class Main {
     
 		if(o instanceof ResponseType) {
 		
-			throw new IllegalArgumentException("An error occured when validating your account. The web server response is: " + ((ResponseType) o).toString());
+			System.out.println("An error occured when validating your account. The web server response is: " + ((ResponseType) o).toString());
 		
 		} else if(o instanceof User) {
 		
