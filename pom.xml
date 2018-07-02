@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>LifeMC-API</groupId>
   <artifactId>LifeMC-API</artifactId>
-  <version>1.0</version>
+  <version>1.2</version>
   <name>LifeMC-API</name>
   <description>High performance &amp; feature rich APIs for LifeMC Minecraft Server.</description>
   <url>https://www.lifemcserver.com/</url>
