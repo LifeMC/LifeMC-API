@@ -74,7 +74,7 @@ public class LifeAPI {
 			
 			try {
 				
-				jsonResponse = User.connectTo("https://www.lifemcserver.com/loginAPI.php?" + name + "&password=" + password);
+				jsonResponse = Utils.connectTo("https://www.lifemcserver.com/loginAPI.php?" + name + "&password=" + password);
 				
 			} catch(Exception ex) {
 				
@@ -158,6 +158,46 @@ public class LifeAPI {
 		if(userMap.containsKey(name)) {
 			
 			return userMap.get(name);
+			
+		} else {
+			
+			return null;
+			
+		}
+		
+	}
+	
+	/**
+	 * Gets the current registered player count of the LifeMC.
+	 * May be null, so you should always check != null.
+	 * 
+	 * @returns Integer - Registered player count
+	 * @returns null - If any connection issues occured
+	 */
+	@CheckReturnValue
+	@Nullable
+	public Integer getRegisteredPlayerCount() {
+		
+		String response = null;
+		
+		try {
+			
+			response = Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
+			
+		} catch(Exception ex) {
+			
+			ex.printStackTrace();
+			
+		} catch(Throwable tw) {
+			
+			tw.printStackTrace();
+			
+		}
+		
+		if(response != null) {
+			
+			Integer playerCount = Utils.convertToInteger(response);
+			return playerCount;
 			
 		} else {
 			

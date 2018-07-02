@@ -5,6 +5,7 @@ import java.util.Scanner;
 import com.lifemcserver.api.LifeAPI;
 import com.lifemcserver.api.ResponseType;
 import com.lifemcserver.api.User;
+import com.lifemcserver.api.Utils;
 
 public class Main {
 
@@ -14,11 +15,11 @@ public class Main {
 		
 		Scanner scan = new Scanner(System.in);
 		
-		System.out.print("Enter your username: ");
+		System.out.print("Enter your username (you can enter \"demo\" for testing): ");
 		
 		String userName = scan.next();
 		
-		System.out.print("Enter your password: ");
+		System.out.print("Enter your password (you can enter \"demo\" for testing): ");
 		
 		String password = scan.next();
 		
@@ -37,13 +38,21 @@ public class Main {
 			
 			if(resp.equals(ResponseType.SUCCESS)) {
 				
-				String islandLevel = u.formatValue(u.getIslandLevel());
-				String money = u.formatValue(u.getMoney());
-				String credit = u.formatValue(u.getCreditAmount());
-				String ironsps = u.formatValue(u.getIronSPCount());
-				String diasps = u.formatValue(u.getDiamondBlockSPCount());
-				String profileLikes = u.formatValue(u.getProfileLikes());
-				String profileFollowers = u.formatValue(u.getProfileFollowers());	
+				String registeredPlayerCount = String.valueOf(API.getRegisteredPlayerCount());
+				
+				String islandLevel = Utils.formatValue(u.getIslandLevel());
+				String money = Utils.formatValue(u.getMoney());
+				String credit = Utils.formatValue(u.getCreditAmount());
+				String ironsps = Utils.formatValue(u.getIronSPCount());
+				String diasps = Utils.formatValue(u.getDiamondBlockSPCount());
+				String profileLikes = Utils.formatValue(u.getProfileLikes());
+				String profileFollowers = Utils.formatValue(u.getProfileFollowers());	
+								
+				System.out.println("");
+				
+				System.out.println("Total Registered Players: " + registeredPlayerCount);
+				
+				System.out.println("");
 				
 				System.out.println("Island Level: " + islandLevel);
 				System.out.println("Money: " + money);
@@ -51,7 +60,9 @@ public class Main {
 				System.out.println("Iron SP Count: " + ironsps);
 				System.out.println("Diamond Block SP Count: " + diasps);
 				System.out.println("Profile Likes: " + profileLikes);
-				System.out.println("Profile Followers: " + profileFollowers);
+				System.out.println("Profile Followers: " + profileFollowers); // if it's -1, the user's profile not upgraded to ProfilV2.
+				
+				System.out.println("");
 				
 			} else {
 				
