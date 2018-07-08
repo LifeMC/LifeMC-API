@@ -117,7 +117,7 @@ public abstract class Utils {
 	 */
 	@CheckReturnValue
 	public static Double convertToDouble(final Object obj) {
-		
+		  
 		  try {
 				
 			  if(obj == null) {
@@ -127,7 +127,7 @@ public abstract class Utils {
 			  }
 			  
 			  if (obj instanceof String) {
-
+				  
 				  return Double.parseDouble((String) obj);
 				  
 			  } else if (obj instanceof Number) {
@@ -144,14 +144,8 @@ public abstract class Utils {
 				  
 			  } else {
 				  
-				  String toString = obj.toString();
+				  return Double.parseDouble(String.valueOf(obj));
 				  
-			      if (toString.matches("-?\\d+")) {
-			    	  
-			    	  return ((Integer) Integer.parseInt(toString)).doubleValue();
-			      }
-			      
-			      throw new IllegalArgumentException("This object doesn't represent a double (" + obj + ")");
 			  }
 			  
 		  } catch(NumberFormatException ex) {

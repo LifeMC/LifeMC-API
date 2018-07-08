@@ -195,7 +195,7 @@ public class User {
 	 */
 	public Double getMoney() {
 		
-		return convertToDouble(this.money);
+		return Utils.convertToDouble(this.money);
 		
 	}
 	
@@ -245,7 +245,7 @@ public class User {
 	 */
 	public Integer getProfileFollowers() {
 		
-		return convertToInteger(this.profileFollow);
+		return Utils.convertToInteger(this.profileFollow);
 		
 	}
 	
