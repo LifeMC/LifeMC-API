@@ -1,10 +1,13 @@
 package com.lifemcserver.api;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+
 import javax.annotation.CheckReturnValue;
 
 import org.json.JSONObject;
 
-public class User {
+public final class User {
 
 	private String name;
 	private String password;
@@ -102,80 +105,103 @@ public class User {
 	 * 
 	 * @return ResponseType - The response of the API request.
 	 */
-	public ResponseType updateInfos() {
+	public void updateInfos(final Consumer<ResponseType> consumer) {
 		
-		String jsonResponse = "";
-		
-		try {
+		LifeAPI.apiThread.execute( () -> {
 			
-			jsonResponse = Utils.connectTo("https://www.lifemcserver.com/API.php?" + this.name + "&password=" + this.password);		
+			String jsonResponse = "";
 			
-		} catch(Exception ex) {
-			
-			ex.printStackTrace();
-			
-		} catch(Throwable tw) {
-			
-			tw.printStackTrace();
-			
-		}
-		
-		ResponseType response = null;
-		
-		if(jsonResponse.equalsIgnoreCase("NO_USER")) {
-			
-			response = ResponseType.NO_USER;
-			return response;
-			
-		}
-		
-		else if(jsonResponse.equalsIgnoreCase("WRONG_PASSWORD")) {
-			
-			response = ResponseType.WRONG_PASSWORD;
-			return response;
-			
-		}
-		
-		else if(jsonResponse.equalsIgnoreCase("MAX_TRIES")) {
-			
-			response = ResponseType.MAX_TRIES;
-			return response;
-			
-		}
-		
-		else if(jsonResponse.equalsIgnoreCase("ERROR")) {
-			
-			response = ResponseType.ERROR;
-			return response;
-			
-		}
-		
-		else {
-			
-			if(jsonResponse.contains("userInfo")) {
+			try {
 				
-				response = ResponseType.SUCCESS;
+				jsonResponse = Utils.connectTo("https://www.lifemcserver.com/API.php?" + name + "&password=" + password);		
 				
-			} else {
+			} catch(Exception ex) {
 				
-				response = ResponseType.ERROR;
-				return response;
+				ex.printStackTrace();
+				
+			} catch(Throwable tw) {
+				
+				tw.printStackTrace();
 				
 			}
 			
-		}
+			ResponseType response = null;
+			
+			if(jsonResponse.equalsIgnoreCase("NO_USER")) {
+				
+				response = ResponseType.NO_USER;
+				consumer.accept(response);
+				
+			}
+			
+			else if(jsonResponse.equalsIgnoreCase("WRONG_PASSWORD")) {
+				
+				response = ResponseType.WRONG_PASSWORD;
+				consumer.accept(response);
+				
+			}
+			
+			else if(jsonResponse.equalsIgnoreCase("MAX_TRIES")) {
+				
+				response = ResponseType.MAX_TRIES;
+				consumer.accept(response);
+				
+			}
+			
+			else if(jsonResponse.equalsIgnoreCase("ERROR")) {
+				
+				response = ResponseType.ERROR;
+				consumer.accept(response);
+				
+			}
+			
+			else {
+				
+				if(jsonResponse.contains("userInfo")) {
+					
+					response = ResponseType.SUCCESS;
+					
+				} else {
+					
+					response = ResponseType.ERROR;
+					consumer.accept(response);
+					
+				}
+				
+			}
+			
+			JSONObject userInfos = new JSONObject(jsonResponse).getJSONObject("userInfo");
+			
+			islandLevel = userInfos.getInt("islandLevel");
+			money = userInfos.getString("money");
+			credit = userInfos.getInt("credit");
+			ironsps = userInfos.getInt("ironsps");
+			diasps = userInfos.getInt("diasps");
+			profileLike = userInfos.getInt("profileLike");
+			profileFollow = userInfos.getString("profileFollow");
+			
+			consumer.accept(response);
+			
+		});
 		
-		JSONObject userInfos = new JSONObject(jsonResponse).getJSONObject("userInfo");
+	}
+	
+	/**
+	 * Gets all infos as ConcurrentHashMap<String, Double>.
+	 */
+	public ConcurrentHashMap<String, String> getAllInfos() {
 		
-		islandLevel = userInfos.getInt("islandLevel");
-		money = userInfos.getString("money");
-		credit = userInfos.getInt("credit");
-		ironsps = userInfos.getInt("ironsps");
-		diasps = userInfos.getInt("diasps");
-		profileLike = userInfos.getInt("profileLike");
-		profileFollow = userInfos.getString("profileFollow");
+		ConcurrentHashMap<String, String> map = new ConcurrentHashMap<String, String>();
 		
-		return response;
+		map.put("islandLevel", Utils.formatValue(getIslandLevel()));
+		map.put("money", Utils.formatValue(getMoney()));
+		map.put("credit", Utils.formatValue(getCreditAmount()));
+		map.put("ironsps", Utils.formatValue(getIronSPCount()));
+		map.put("diasps", Utils.formatValue(getDiamondBlockSPCount()));
+		map.put("profileLikes", Utils.formatValue(getProfileLikes()));
+		map.put("profileFollowers", Utils.formatValue(getProfileFollowers()));
+		
+		return map;
 		
 	}
 	
@@ -240,7 +266,24 @@ public class User {
 	}
 	
 	/**
+	 * Checks if the user has updated to ProfileV2.
+	 * 
+	 * @return true if user is updated & using profile v2.
+	 * false if user is NOT updated / NOT using profile v2.
+	 */
+	public boolean isUsingProfileV2() {
+		
+		return getProfileFollowers() != -1;
+		
+	}
+	
+	/**
 	 * Gets the profile follower count of the user.
+	 * 
+	 * WARNING
+	 * This method returns -1 as an integer value if the user has not updated to ProfileV2.
+	 * @see User#isUsingProfileV2
+	 * 
 	 * @return Integer profileFollow - The profile follower count of the user.
 	 */
 	public Integer getProfileFollowers() {

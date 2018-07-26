@@ -1,5 +1,11 @@
 # LifeMC-API
-The LifeMC API Library for Getting a User's Info.
+The LifeMC API Library for Getting a User's Info. Based on Java.
+
+# Features
+- **Async Execution.** This means your program is never blocks when making API requests.
+- **Thread Safe.** This means you never get a ConcurrentModificationException.
+- **Cache System.** Saves all users to a cache map. Second time when you use the user, the user is returned from cache map.
+- **High Performance & Feature Rich.** Faster than you need! All features are available via easy methods.
 
 # How to install?
 - First, download the latest release <a href="https://github.com/LifeMC/LifeMC-API/releases/latest/">here</a>.
@@ -8,24 +14,28 @@ The LifeMC API Library for Getting a User's Info.
 
 # How to use?
 - Create an instance of LifeAPI class and add a main method.
+
 ```java
 package com.lifemcserver.test;
 
 import com.lifemcserver.api.LifeAPI;
 
 public class Main {
-
+	
 	public static LifeAPI API = new LifeAPI();
 	
   	public static void main(String[] args) {
-  	
-  	
-  	
+  		
+  		
+  		
   	}
   	
 }
 ```
+
 - Get a user from user name and password. (You should request this informations from the user)
+(Consumers used for Async returning. LifeAPI works fully async & thread-safe.)
+
 ```java
 package com.lifemcserver.test;
 
@@ -33,22 +43,36 @@ import com.lifemcserver.api.LifeAPI;
 import com.lifemcserver.api.User;
 
 public class Main {
-
+	
 	public static LifeAPI API = new LifeAPI();
 	
   	public static void main(String[] args) {
-  	
-    	Object o = API.getUser("demo", "demo");
+  		
+    	Object o = API.getUser("demo", "demo", new Consumer<Object>(){
+    	
+    		@Override
+    		public void accept(Object o) {
+    			
+    			// o is the returned value from getUser method.
+    			
+    		}
+    	
+    	});
     	
   	}
   	
 }
 ```
+
 - Check if any errors occured, print the infos and terminate the program and the LifeAPI Background Thread. Remember, if you don't use System.exit, Your program continues to run after execution. Because LifeAPI Background Thread always run in background. A full example below:
+
 ```java
 package com.lifemcserver.test;
 
+import java.util.Date;
+import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 import com.lifemcserver.api.LifeAPI;
 import com.lifemcserver.api.ResponseType;
@@ -56,73 +80,128 @@ import com.lifemcserver.api.User;
 import com.lifemcserver.api.Utils;
 
 public class Main {
-
+	
 	public static LifeAPI API = new LifeAPI();
+	public static Scanner Scan = new Scanner(System.in);
 	
 	public static void main(String[] args) {
 		
-		Scanner scan = new Scanner(System.in);
-		
 		System.out.print("Enter your username (you can enter \"demo\" for testing): ");
 		
-		String userName = scan.next();
+		String userName = Scan.next();
 		
 		System.out.print("Enter your password (you can enter \"demo\" for testing): ");
 		
-		String password = scan.next();
+		String password = Scan.next();
+
+		System.out.println("Please wait when validating credentials you entered...");
 		
-		scan.close();
+		final Date validateFirst = new Date();
 		
-		Object o = API.getUser(userName, password);
-		
-		if(o instanceof ResponseType) {
+		API.getUser(userName, password, new Consumer<Object>() {
 			
-			System.out.println("An error occured when validating your account. The web server response is: " + ((ResponseType) o).toString());
-			
-		} else if(o instanceof User) {
-			
-			User u = (User) o;
-			ResponseType resp = u.updateInfos();
-			
-			if(resp.equals(ResponseType.SUCCESS)) {
+			@Override
+			public void accept(final Object o) {
 				
-				String registeredPlayerCount = String.valueOf(API.getRegisteredPlayerCount());
-				
-				String islandLevel = Utils.formatValue(u.getIslandLevel());
-				String money = Utils.formatValue(u.getMoney());
-				String credit = Utils.formatValue(u.getCreditAmount());
-				String ironsps = Utils.formatValue(u.getIronSPCount());
-				String diasps = Utils.formatValue(u.getDiamondBlockSPCount());
-				String profileLikes = Utils.formatValue(u.getProfileLikes());
-				String profileFollowers = Utils.formatValue(u.getProfileFollowers());	
+				if(o instanceof ResponseType) {
+					
+					ResponseType response = (ResponseType) o;
+					
+					if(response.equals(ResponseType.NO_USER)) {
+						
+						System.out.println("The user name you entered is not found on the database. Please re-check credentials you entered.");
+						
+					} else if(response.equals(ResponseType.WRONG_PASSWORD)) {
+						
+						System.out.println("The password you entered is wrong. Please re-check credentials you entered.");
+						
+					} else if(response.equals(ResponseType.MAX_TRIES)) {
+						
+						System.out.println("You have exceeded the maximum wrong password limit. You have to wait three minutes.");
+						
+					} else if(response.equals(ResponseType.ERROR)) {
+						
+						System.out.println("The web server returned a error status. Maybe the web server under maintenance. Please retry later.");
+						
+					} else {
+						
+						System.out.println("An error occured when validating your account from web server. Maybe the web server is down. Please retry later.");
+						
+					}
+					
+				} else if(o instanceof User) {
+					
+					Date validateTwo = new Date();
+					
+					Long diff = Utils.diff(validateFirst, validateTwo);
+					
+					System.out.println();
+					System.out.println("Successfully validated your account. It tooked " + diff + " ms. Welcome! ;)");
+					System.out.println("Now getting the total registered player count...");
+					System.out.println();
+					
+					final Date registeredFirst = new Date();
+					
+					API.getRegisteredPlayerCount(new Consumer<Integer>() {
+						
+						@Override
+						public void accept(final Integer registeredPlayerCount) {
+							
+							Date registeredTwo = new Date();
+							
+							Long diffTwo = Utils.diff(registeredFirst, registeredTwo);
+							
+							System.out.println("Getted the total registered player count from api was successful. It tooked " + diffTwo + " ms.");
+							
+							System.out.println();
+							System.out.println("registeredPlayerCount : " + registeredPlayerCount);
+							System.out.println();
+							
+							System.out.println("Now getting account infos...");
+							System.out.println();
+							
+							final User user = (User) o;
+							final Date updatedFirst = new Date();
+							
+							user.updateInfos(new Consumer<ResponseType>() {
 								
-				System.out.println("");
+								@Override
+								public void accept(final ResponseType response) {
+									
+									Date updatedTwo = new Date();
+									
+									Long diffThree = Utils.diff(updatedFirst, updatedTwo);
+									
+									System.out.println("Getted account infos successfully. It tooked " + diffThree + " ms.");
+									System.out.println();
+									
+									for(Entry<String, String> entry : user.getAllInfos().entrySet()) {
+										
+										System.out.println(entry.getKey() + " : " + entry.getValue());
+										
+									}
+									
+									Main.main(null);
+									
+								}
+								
+							});
+							
+						}
+						
+					});
+					
+				} else {
+					
+					System.out.println("An error occured when validating account credentials you entered. The web server's response is: " + String.valueOf(o));
+					
+				}
 				
-				System.out.println("Total Registered Players: " + registeredPlayerCount);
-				
-				System.out.println("");
-				
-				System.out.println("Island Level: " + islandLevel);
-				System.out.println("Money: " + money);
-				System.out.println("Credit: " + credit);
-				System.out.println("Iron SP Count: " + ironsps);
-				System.out.println("Diamond Block SP Count: " + diasps);
-				System.out.println("Profile Likes: " + profileLikes);
-				System.out.println("Profile Followers: " + profileFollowers); // if it's -1, the user's profile not upgraded to ProfilV2.
-				
-				System.out.println("");
-				
-			} else {
-				
-				System.out.println("An error occured when getting infos from web server. The web server response is: " + resp.toString());
-				
-			}	
+			}
 			
-		}
+		});
 		
-		System.exit(0); // don't forget this at end of your program
-		
-	}
+    }
 	
 }
 ```

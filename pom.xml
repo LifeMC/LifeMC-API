@@ -2,27 +2,42 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>LifeMC-API</groupId>
   <artifactId>LifeMC-API</artifactId>
-  <version>1.2</version>
+  <version>1.3</version>
   <name>LifeMC-API</name>
   <description>High performance &amp; feature rich APIs for LifeMC Minecraft Server.</description>
-  <url>https://www.lifemcserver.com/</url>
+  <url>https://www.lifemcserver.com/forum/</url>
   <inceptionYear>LifeMC-API</inceptionYear>
   <organization>
   	<name>LifeMC, Inc.</name>
-  	<url>https://www.lifemcserver.com/</url>
+  	<url>https://www.lifemcserver.com/forum/</url>
   </organization>
   <dependencies>
   	<dependency>
   		<groupId>com.google.guava</groupId>
   		<artifactId>guava</artifactId>
   		<version>25.1-jre</version>
-  		<scope>provided</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.json</groupId>
   		<artifactId>json</artifactId>
   		<version>20180130</version>
-  		<scope>provided</scope>
   	</dependency>
   </dependencies>
+  <ciManagement>
+  	<system>Open Thread</system>
+  	<url>https://www.lifemcserver.com/forum/forumlar/destek-hatti/</url>
+  </ciManagement>
+  <properties>
+  	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <scm>
+  	<url>https://www.lifemcserver.com/forum/</url>
+  	<connection>LifeMC, Inc.</connection>
+  	<developerConnection>TheDGOfficial / LifeMCServer.</developerConnection>
+  	<tag>LifeMC-API</tag>
+  </scm>
+  <issueManagement>
+  	<system>GitHub Issues</system>
+  	<url>https://github.com/LifeMC/LifeMC-API/issues</url>
+  </issueManagement>
 </project>

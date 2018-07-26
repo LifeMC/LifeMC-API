@@ -3,19 +3,20 @@ package com.lifemcserver.api;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-public class LifeAPI {
-
+public final class LifeAPI {
+	
 	/**
 	 * API Thread to execute some heavy tasks.
 	 * (Such as web connections. Causes some spikes and performance losses.)
 	 */
-	protected static ExecutorService apiThread = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("LifeAPI - API Thread").build());
+	protected static ExecutorService apiThread = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setPriority(Thread.MAX_PRIORITY).setNameFormat("LifeAPI - API Thread").build());
 	
 	/**
 	 * The current LifeAPI Instance
@@ -31,6 +32,23 @@ public class LifeAPI {
 	 * Initializes the LifeAPI
 	 */
 	public LifeAPI() {
+		
+		try {
+			// for loading classes at startup - makes it faster when requesting first time.
+			Class.forName("com.lifemcserver.api.LifeAPI");
+			Class.forName("com.lifemcserver.api.ResponseType");
+			Class.forName("com.lifemcserver.api.User");
+			Class.forName("com.lifemcserver.api.Utils");	
+		} catch(Throwable throwable) { throwable.printStackTrace(); }
+		
+		try {
+			apiThread.execute( () -> {
+				
+				// for initializing http client for caching. - makes it faster when using first time.
+				Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
+				
+			});
+		} catch(Throwable throwable) { throwable.printStackTrace(); }
 		
 		Instance = this;
 		
@@ -62,79 +80,83 @@ public class LifeAPI {
 	 * @returns (Object) ResponseType response - if any errors occured.
 	 * @returns (Object) User u - if validation successed and user object created successfully.
 	 */
-	public Object getUser(String name, String password) {
-
-		if(userMap.containsKey(name)) {
+	public void getUser(final String name, final String password, final Consumer<Object> consumer) {
+		
+		apiThread.execute( () -> {
 			
-			return userMap.get(name);
-			
-		} else {
-			
-			String jsonResponse = "";
-			
-			try {
+			if(userMap.containsKey(name)) {
 				
-				jsonResponse = Utils.connectTo("https://www.lifemcserver.com/loginAPI.php?" + name + "&password=" + password);
+				consumer.accept(userMap.get(name));
 				
-			} catch(Exception ex) {
+			} else {
 				
-				ex.printStackTrace();
+				String jsonResponse = "";
 				
-			} catch(Throwable tw) {
+				try {
+					
+					jsonResponse = Utils.connectTo("https://www.lifemcserver.com/loginAPI.php?" + name + "&password=" + password);
+					
+				} catch(Exception ex) {
+					
+					ex.printStackTrace();
+					
+				} catch(Throwable tw) {
+					
+					tw.printStackTrace();
+					
+				}
 				
-				tw.printStackTrace();
+				ResponseType response = null;
+				
+				if(jsonResponse.equalsIgnoreCase("NO_USER")) {
+					
+					response = ResponseType.NO_USER;
+					consumer.accept(response);
+					
+				}
+				
+				else if(jsonResponse.equalsIgnoreCase("WRONG_PASSWORD")) {
+					
+					response = ResponseType.WRONG_PASSWORD;
+					consumer.accept(response);
+					
+				}
+				
+				else if(jsonResponse.equalsIgnoreCase("MAX_TRIES")) {
+					
+					response = ResponseType.MAX_TRIES;
+					consumer.accept(response);
+					
+				}
+				
+				else if(jsonResponse.equalsIgnoreCase("ERROR")) {
+					
+					response = ResponseType.ERROR;
+					consumer.accept(response);
+					
+				}
+				
+				else if(jsonResponse.equalsIgnoreCase("SUCCESS")) {
+					
+					response = ResponseType.SUCCESS;
+					
+				}
+				
+				else {
+					
+					response = ResponseType.ERROR;
+					consumer.accept(response);
+					
+				}
+				
+				User u = new User(name, password);
+				userMap.put(name, u);
+				
+				consumer.accept(u);
 				
 			}
 			
-			ResponseType response = null;
-			
-			if(jsonResponse.equalsIgnoreCase("NO_USER")) {
-				
-				response = ResponseType.NO_USER;
-				return response;
-				
-			}
-			
-			else if(jsonResponse.equalsIgnoreCase("WRONG_PASSWORD")) {
-				
-				response = ResponseType.WRONG_PASSWORD;
-				return response;
-				
-			}
-			
-			else if(jsonResponse.equalsIgnoreCase("MAX_TRIES")) {
-				
-				response = ResponseType.MAX_TRIES;
-				return response;
-				
-			}
-			
-			else if(jsonResponse.equalsIgnoreCase("ERROR")) {
-				
-				response = ResponseType.ERROR;
-				return response;
-				
-			}
-			
-			else if(jsonResponse.equalsIgnoreCase("SUCCESS")) {
-				
-				response = ResponseType.SUCCESS;
-				
-			}
-			
-			else {
-				
-				response = ResponseType.ERROR;
-				return response;
-				
-			}
-			
-			User u = new User(name, password);
-			userMap.put(name, u);
-			
-			return u;
-			
-		}
+		});
 		
 	}
 	
@@ -171,39 +193,43 @@ public class LifeAPI {
 	 * Gets the current registered player count of the LifeMC.
 	 * May be null, so you should always check != null.
 	 * 
-	 * @returns Integer - Registered player count
-	 * @returns null - If any connection issues occured
+	 * @return Integer - Registered player count
+	 * @return null - If any connection issues occured
 	 */
 	@CheckReturnValue
 	@Nullable
-	public Integer getRegisteredPlayerCount() {
+	public void getRegisteredPlayerCount(final Consumer<Integer> consumer) {
 		
-		String response = null;
-		
-		try {
+		apiThread.execute( () -> {
 			
-			response = Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
+			String response = null;
 			
-		} catch(Exception ex) {
+			try {
+				
+				response = Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
+				
+			} catch(Exception ex) {
+				
+				ex.printStackTrace();
+				
+			} catch(Throwable tw) {
+				
+				tw.printStackTrace();
+				
+			}
 			
-			ex.printStackTrace();
+			if(response != null) {
+				
+				Integer playerCount = Utils.convertToInteger(response);
+				consumer.accept(playerCount);
+				
+			} else {
+				
+				consumer.accept(null);
+				
+			}
 			
-		} catch(Throwable tw) {
-			
-			tw.printStackTrace();
-			
-		}
-		
-		if(response != null) {
-			
-			Integer playerCount = Utils.convertToInteger(response);
-			return playerCount;
-			
-		} else {
-			
-			return null;
-			
-		}
+		});
 		
 	}
 	
