@@ -28,7 +28,17 @@
   	<url>https://www.lifemcserver.com/forum/forumlar/destek-hatti/</url>
   </ciManagement>
   <properties>
+ 
+   	<!-- UTF 8 -->
+  
   	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  	<project.build.outputEncoding>UTF-8</project.build.outputEncoding>
+  	
+ 	<!-- Java 8 -->
+ 	
+ 	<project.build.source>1.8</project.build.source>
+ 	<project.build.target>1.8</project.build.target>
+ 	
   </properties>
   <scm>
   	<url>https://www.lifemcserver.com/forum/</url>

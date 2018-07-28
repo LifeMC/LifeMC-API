@@ -10,20 +10,20 @@ import com.lifemcserver.api.ResponseType;
 import com.lifemcserver.api.User;
 import com.lifemcserver.api.Utils;
 
-public class Main {
+public final class Main {
 	
-	public static LifeAPI API = new LifeAPI();
-	public static Scanner Scan = new Scanner(System.in);
+	public static final LifeAPI API = new LifeAPI();
+	public static final Scanner scan = new Scanner(System.in, "UTF-8");
 	
-	public static void main(String[] args) {
+	public static final void main(final String[] args) {
 		
 		System.out.print("Enter your username (you can enter \"demo\" for testing): ");
 		
-		String userName = Scan.next();
+		String userName = scan.next();
 		
 		System.out.print("Enter your password (you can enter \"demo\" for testing): ");
 		
-		String password = Scan.next();
+		String password = scan.next();
 
 		System.out.println("Please wait when validating credentials you entered...");
 		
@@ -112,7 +112,7 @@ public class Main {
 										
 									}
 									
-									Main.main(null);
+									Main.main(new String[0]);
 									
 								}
 								

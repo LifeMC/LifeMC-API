@@ -7,6 +7,10 @@ The LifeMC API Library for Getting a User's Info. Based on Java.
 - **Cache System.** Saves all users to a cache map. Second time when you use the user, the user is returned from cache map.
 - **High Performance & Feature Rich.** Faster than you need! All features are available via easy methods.
 
+# Requirements
+- Java 8 is required for Life-API. If you are running Java 7, upgrade it. You should have no problems with it.
+(Upgrading from Java 7 to Java 8 is not causes problems in general. Just upgrade and test it.)
+
 # How to install?
 - First, download the latest release <a href="https://github.com/LifeMC/LifeMC-API/releases/latest/">here</a>.
 - After the download, create your Java Project in your IDE. And, add LifeAPI.jar to your Build Path (or classpath)
@@ -79,20 +83,20 @@ import com.lifemcserver.api.ResponseType;
 import com.lifemcserver.api.User;
 import com.lifemcserver.api.Utils;
 
-public class Main {
+public final class Main {
 	
-	public static LifeAPI API = new LifeAPI();
-	public static Scanner Scan = new Scanner(System.in);
+	public static final LifeAPI API = new LifeAPI();
+	public static final Scanner scan = new Scanner(System.in, "UTF-8");
 	
-	public static void main(String[] args) {
+	public static final void main(final String[] args) {
 		
 		System.out.print("Enter your username (you can enter \"demo\" for testing): ");
 		
-		String userName = Scan.next();
+		String userName = scan.next();
 		
 		System.out.print("Enter your password (you can enter \"demo\" for testing): ");
 		
-		String password = Scan.next();
+		String password = scan.next();
 
 		System.out.println("Please wait when validating credentials you entered...");
 		
@@ -181,7 +185,7 @@ public class Main {
 										
 									}
 									
-									Main.main(null);
+									Main.main(new String[0]);
 									
 								}
 								

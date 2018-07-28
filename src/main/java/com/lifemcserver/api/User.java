@@ -9,16 +9,16 @@ import org.json.JSONObject;
 
 public final class User {
 
-	private String name;
-	private String password;
+	private volatile String name = "demo";
+	private volatile String password = "demo";
 	
-	private Integer islandLevel;
-	private String money;
-	private Integer credit;
-	private Integer ironsps;
-	private Integer diasps;
-	private Integer profileLike;
-	private String profileFollow;
+	private volatile int islandLevel;
+	private volatile String money = "0.00";
+	private volatile int credit;
+	private volatile int ironsps;
+	private volatile int diasps;
+	private volatile int profileLike;
+	private volatile String profileFollow = "-1";
 	
 	/**
 	 * Creates a user object with the given user name and password.
@@ -27,7 +27,7 @@ public final class User {
 	 * @param String name - The user name of the user.
 	 * @param String password - The password of the user.
 	 */
-	public User(String name, String password) {
+	public User(final String name, final String password) {
 		
 		this.name = name;
 		this.password = password;
@@ -49,7 +49,7 @@ public final class User {
 	 * @param profileLike - The profile like count of the user.
 	 * @param profileFollow - The profile follower count of the user.
 	 */
-	public User(String name, String password, Integer islandLevel, String money, Integer credit, Integer ironsps, Integer diasps, Integer profileLike, String profileFollow) {
+	public User(final String name, final String password, final int islandLevel, String money, final int credit, final int ironsps, final int diasps, final int profileLike, String profileFollow) {
 		
 		this.name = name;
 		this.password = password;
@@ -68,7 +68,7 @@ public final class User {
 	 * Gets the user name of the user.
 	 * @return String name - The user name of the user.
 	 */
-	public String getName() {
+	public final String getName() {
 		
 		return name;
 		
@@ -79,7 +79,7 @@ public final class User {
 	 * @param String newName - The new user name of the user.
 	 * @return User - Current user instance.
 	 */
-	public User setName(String newName) {
+	public final User setName(final String newName) {
 		
 		this.name = newName;
 		return this;
@@ -91,7 +91,7 @@ public final class User {
 	 * @param String newPassword - The new password of the user.
 	 * @return User - Current user instance.
 	 */
-	public User setPassword(String newPassword) {
+	public final User setPassword(final String newPassword) {
 		
 		this.password = newPassword;
 		return this;
@@ -105,7 +105,7 @@ public final class User {
 	 * 
 	 * @return ResponseType - The response of the API request.
 	 */
-	public void updateInfos(final Consumer<ResponseType> consumer) {
+	public final void updateInfos(final Consumer<ResponseType> consumer) {
 		
 		LifeAPI.apiThread.execute( () -> {
 			
@@ -163,7 +163,7 @@ public final class User {
 					
 				} else {
 					
-					response = ResponseType.ERROR;
+					response = ResponseType.UNKNOWN;
 					consumer.accept(response);
 					
 				}
@@ -189,7 +189,7 @@ public final class User {
 	/**
 	 * Gets all infos as ConcurrentHashMap<String, Double>.
 	 */
-	public ConcurrentHashMap<String, String> getAllInfos() {
+	public final ConcurrentHashMap<String, String> getAllInfos() {
 		
 		ConcurrentHashMap<String, String> map = new ConcurrentHashMap<String, String>();
 		
@@ -209,7 +209,7 @@ public final class User {
 	 * Gets the island level of the user.
 	 * @return Integer islandLevel - The island level of the user.
 	 */
-	public Integer getIslandLevel() {
+	public final int getIslandLevel() {
 		
 		return this.islandLevel;
 		
@@ -219,7 +219,7 @@ public final class User {
 	 * Gets the money of the user.
 	 * @return Double money - The money of the user.
 	 */
-	public Double getMoney() {
+	public final double getMoney() {
 		
 		return Utils.convertToDouble(this.money);
 		
@@ -229,7 +229,7 @@ public final class User {
 	 * Gets the credit amount of the user.
 	 * @return Integer credit - The credit amount of the user.
 	 */
-	public Integer getCreditAmount() {
+	public final int getCreditAmount() {
 		
 		return this.credit;
 		
@@ -239,7 +239,7 @@ public final class User {
 	 * Gets the Iron Spawner Count of the user.
 	 * @return Integer ironsps - The iron spawner count of the user.
 	 */
-	public Integer getIronSPCount() {
+	public final int getIronSPCount() {
 		
 		return this.ironsps;
 		
@@ -249,7 +249,7 @@ public final class User {
 	 * Gets the Diamond Block Spawner Count of the user.
 	 * @return Integer diasps - The diamond block spawner count of the user.
 	 */
-	public Integer getDiamondBlockSPCount() {
+	public final int getDiamondBlockSPCount() {
 		
 		return this.diasps;
 		
@@ -259,7 +259,7 @@ public final class User {
 	 * Gets the profile like count of the user.
 	 * @return Integer profileLike - The profile like count of the user.
 	 */
-	public Integer getProfileLikes() {
+	public final int getProfileLikes() {
 		
 		return this.profileLike;
 		
@@ -271,7 +271,7 @@ public final class User {
 	 * @return true if user is updated & using profile v2.
 	 * false if user is NOT updated / NOT using profile v2.
 	 */
-	public boolean isUsingProfileV2() {
+	public final boolean isUsingProfileV2() {
 		
 		return getProfileFollowers() != -1;
 		
@@ -286,7 +286,7 @@ public final class User {
 	 * 
 	 * @return Integer profileFollow - The profile follower count of the user.
 	 */
-	public Integer getProfileFollowers() {
+	public final int getProfileFollowers() {
 		
 		return Utils.convertToInteger(this.profileFollow);
 		
@@ -297,12 +297,13 @@ public final class User {
 	 * @param double d - Any number to format. (you can convert to double using .doubleValue() or convertToDouble(object).)
 	 * @return String val - The formatted value of the given number.
 	 * 
+	 * @deprecated
 	 * Use Utils.formatValue(final double d) instead of this.
 	 * This keeps for backwards compability.
 	 */
 	@CheckReturnValue
 	@Deprecated
-	public static String formatValue(double d) {
+	public static final String formatValue(double d) {
 		
 		return Utils.formatValue(d);
 		
@@ -313,12 +314,13 @@ public final class User {
 	 * @param Object obj - Any object to convert.
 	 * @return Integer - The integer value of the given object.
 	 * 
+	 * @deprecated
 	 * Use Utils.convertToInteger(final Object obj) instead of this.
 	 * This keeps for backwards compability.
 	 */
 	@CheckReturnValue
 	@Deprecated
-	public static Integer convertToInteger(Object obj) {
+	public static final Integer convertToInteger(Object obj) {
 		
 		return Utils.convertToInteger(obj);
 		
@@ -329,12 +331,13 @@ public final class User {
 	 * @param Object obj - Any object to convert.
 	 * @return Double - The double value of the given object.
 	 * 
+	 * @deprecated
 	 * Use Utils.convertToDouble(final Object obj) instead of this.
 	 * This keeps for backwards compability.
 	 */
 	@CheckReturnValue
 	@Deprecated
-	public static Double convertToDouble(Object obj) {
+	public static final Double convertToDouble(Object obj) {
 		
 		return Utils.convertToDouble(obj);
 		
@@ -349,12 +352,13 @@ public final class User {
 	 * @throws Exception - If any exceptions occured.
 	 * @throws Throwable - If any exceptions occured.
 	 * 
+	 * @deprecated
 	 * Use Utils.connectTo(final String address) instead of this.
 	 * This keeps for backwards compability.
 	 */
 	@CheckReturnValue
 	@Deprecated
-	public static String connectTo(final String address) throws Exception, Throwable {
+	public static final String connectTo(final String address) throws Exception, Throwable {
 		
 		return Utils.connectTo(address);
 		
@@ -364,7 +368,7 @@ public final class User {
 	 * Gets the current user object's instance.
 	 * @return User - The current user object instance.
 	 */
-	public User getInstance() {
+	public final User getInstance() {
 		
 		return this;
 		

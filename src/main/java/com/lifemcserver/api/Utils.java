@@ -3,31 +3,39 @@ package com.lifemcserver.api;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
-import javax.net.ssl.HttpsURLConnection;
-
 public final class Utils {
-
+	
+	protected static final ConcurrentHashMap<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
+	
+	static {
+		
+		URLConnection.setDefaultAllowUserInteraction(false);
+		HttpURLConnection.setFollowRedirects(true);
+		
+	}
+	
 	/**
 	 * Formats a number to in-game format.
 	 * 
 	 * @param double d - Any number to format. (you can convert to double using .doubleValue() or convertToDouble(object).)
 	 * @return String val - The formatted value of the given number.
 	 */
-	@CheckReturnValue
     public static final String formatValue(final double d) {
     	
         boolean isWholeNumber = d == Math.round( d );
@@ -52,8 +60,7 @@ public final class Utils {
 	 * 
 	 * @throws IllegalArgumentException - If given object doesn't represents an Integer.
 	 */
-	@CheckReturnValue
-	public static final Integer convertToInteger(final Object obj) {
+	public static final int convertToInteger(final Object obj) {
 		
 		  try {
 				
@@ -111,8 +118,7 @@ public final class Utils {
 	 * 
 	 * @throws IllegalArgumentException - If given object doesn't represents an Double.
 	 */
-	@CheckReturnValue
-	public static final Double convertToDouble(final Object obj) {
+	public static final double convertToDouble(final Object obj) {
 		  
 		  try {
 				
@@ -164,42 +170,43 @@ public final class Utils {
 	 * @param final String address - The URL of the web server.
 	 * @return String response - The response from the web server.
 	 */
-	@CheckReturnValue
-	@Nullable
 	public static final String connectTo(final String address) {
+		
+		String response = null;
+		BufferedInputStream in = null;
+		BufferedReader br = null;
 		
 		try {
 			
-			URL url = new URL(address);
+			URL url = null;
 			
-			HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+			if(urlCache.containsKey(address)) {
+				
+				url = urlCache.get(address);
+				
+			}
+			
+			if(url == null) {
+				
+				url =  new URL(address);
+				urlCache.put(address, url);
+				
+			}
+			
+			URLConnection con = url.openConnection();
 			
 			con.setAllowUserInteraction(false);
 			con.setDoOutput(false);
 			con.setUseCaches(true);
-			con.setRequestMethod("GET");
+			con.setRequestProperty("Method", "GET");
 			con.setRequestProperty("Charset", "UTF-8");
 			con.setRequestProperty("Encoding", "UTF-8");
 			con.setRequestProperty("Content-Type", "application/json");
 			con.setRequestProperty("Accept", "application/json");
 			con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36");
-		    con.setRequestProperty("Referer", "https://www.lifemcserver.com/forum/");
-			
-		    InputStream error = con.getErrorStream();
+		    con.setRequestProperty("Referer", "https://www.lifemcserver.com/forum/");	
 		    
-		    BufferedInputStream in = null;
-		    
-		    if (error == null) {
-		    	
-		    	in = new BufferedInputStream(con.getInputStream());
-		    	
-		    } else {
-		    	
-				error.close();
-		    	throw new IOException("An internal error occured when connecting to web server. Response code: " + con.getResponseCode());
-				
-		    }
-		    
+		    in = new BufferedInputStream(con.getInputStream());
 		    String encoding = con.getContentEncoding();
 		    
 		    if (encoding != null) {
@@ -217,26 +224,58 @@ public final class Utils {
 			}
 		    
 			StringBuilder responseBody = new StringBuilder();
-		    BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+		    br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 		    
 		    String line = "";
 		    
 		    while ((line = br.readLine()) != null) {
 		    	
-		    	responseBody.append(line.toString().trim());
+		    	responseBody.append(line.trim());
 		    	responseBody.append("\n");
 		    	
 		    }
 		    
 			in.close();
+			br.close();
 			
-			String response = responseBody.toString().trim();
+			response = responseBody.toString().trim();
 			
 			//con.disconnect(); - commented out for caching the connection
 			
 			return response;
 			
-		} catch(Throwable throwable) { throwable.printStackTrace(); return null; }
+		} catch(Throwable throwable) { throwable.printStackTrace(); return response; }
+		finally {
+			
+			if(in != null) {
+				
+				try {
+					
+					in.close();
+					
+				} catch (IOException e) {
+					
+					e.printStackTrace();
+					
+				}
+				
+			}
+			
+			if(br != null) {
+				
+				try {
+					
+					br.close();
+					
+				} catch (IOException e) {
+					
+					e.printStackTrace();
+					
+				}
+				
+			}
+			
+		}
 		
 	}
 	
@@ -253,9 +292,9 @@ public final class Utils {
 	 * 
 	 * @return The absolute time between specified two dates in {@link TimeUnit#MILLISECONDS} format.
 	 */
-  	public static Long diff(Date dateOne, Date dateTwo) {
+  	public static final long diff(final Date dateOne, final Date dateTwo) {
   		
-  		Long diff = null;
+  		long diff;
   		
   		if(dateOne.getTime() > dateTwo.getTime()) {
   			
@@ -270,5 +309,21 @@ public final class Utils {
   	    return diff;
   	    
   	}
-	
+  	
+  	/**
+  	 * Adds given values to given list and returns the updated list.
+  	 * 
+  	 * @param listToAdd - The list to add values.
+  	 * @param toAdd - The values to add.
+  	 * 
+  	 * @return the updated list with added values.
+  	 */
+  	@SafeVarargs
+	public static final <T> List<T> addToList(final List<T> listToAdd, final T... toAdd) {
+  		
+  		listToAdd.addAll(Arrays.asList(toAdd));
+  		return listToAdd;
+  		
+  	}
+  	
 }
