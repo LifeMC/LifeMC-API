@@ -22,6 +22,7 @@ import java.util.zip.InflaterInputStream;
 public final class Utils {
 	
 	protected static final ConcurrentHashMap<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
+    private static final DecimalFormatSymbols formatSymbols = new DecimalFormatSymbols( Locale.ENGLISH );
 	
 	static {
 		
@@ -39,9 +40,7 @@ public final class Utils {
     public static final String formatValue(final double d) {
     	
         boolean isWholeNumber = d == Math.round( d );
-        
-        DecimalFormatSymbols formatSymbols = new DecimalFormatSymbols( Locale.ENGLISH );
-        
+                
         formatSymbols.setDecimalSeparator( '.' );
         
         String pattern = isWholeNumber ? "###,###.###" : "###,##0.00";
