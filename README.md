@@ -52,14 +52,13 @@ public class Main {
 	
   	public static void main(String[] args) {
   		
-    	Object o = API.getUser("demo", "demo", new Consumer<Object>(){
+    	API.getUser("demo", "demo", (user) -> {
+    		
+    		// ...
+    		
+    	}, (error) -> {
     	
-    		@Override
-    		public void accept(Object o) {
-    			
-    			// o is the returned value from getUser method.
-    			
-    		}
+    		error.getError().printStackTrace();
     	
     	});
     	
@@ -79,7 +78,6 @@ import java.util.Scanner;
 
 import com.lifemcserver.api.LifeAPI;
 import com.lifemcserver.api.ResponseType;
-import com.lifemcserver.api.User;
 import com.lifemcserver.api.Utils;
 
 public final class Main {
@@ -101,89 +99,84 @@ public final class Main {
 		
 		final Date validateFirst = new Date();
 		
-		API.getUser(userName, password, (o) -> {
-
-			if(o instanceof ResponseType) {
+		API.getUser(userName, password, (user) -> {
+			
+			Date validateTwo = new Date();
+			
+			Long diff = Utils.diff(validateFirst, validateTwo);
+			
+			System.out.println();
+			System.out.println("Successfully validated your account. It tooked " + diff + " ms. Welcome! ;)");
+			System.out.println("Now getting the total registered player count...");
+			System.out.println();
+			
+			final Date registeredFirst = new Date();
+			
+			API.getRegisteredPlayerCount( (registeredPlayerCount) -> {
 				
-				ResponseType response = (ResponseType) o;
+				Date registeredTwo = new Date();
 				
-				if(response.equals(ResponseType.NO_USER)) {
-					
-					System.out.println("The user name you entered is not found on the database. Please re-check credentials you entered.");
-					
-				} else if(response.equals(ResponseType.WRONG_PASSWORD)) {
-					
-					System.out.println("The password you entered is wrong. Please re-check credentials you entered.");
-					
-				} else if(response.equals(ResponseType.MAX_TRIES)) {
-					
-					System.out.println("You have exceeded the maximum wrong password limit. You have to wait three minutes.");
-					
-				} else if(response.equals(ResponseType.ERROR)) {
-					
-					System.out.println("The web server returned a error status. Maybe the web server under maintenance. Please retry later.");
-					
-				} else {
-					
-					System.out.println("An error occured when validating your account from web server. Maybe the web server is down. Please retry later.");
-					
-				}
+				Long diffTwo = Utils.diff(registeredFirst, registeredTwo);
 				
-			} else if(o instanceof User) {
-				
-				Date validateTwo = new Date();
-				
-				Long diff = Utils.diff(validateFirst, validateTwo);
+				System.out.println("Getted the total registered player count from api was successful. It tooked " + diffTwo + " ms.");
 				
 				System.out.println();
-				System.out.println("Successfully validated your account. It tooked " + diff + " ms. Welcome! ;)");
-				System.out.println("Now getting the total registered player count...");
+				System.out.println("registeredPlayerCount : " + registeredPlayerCount);
 				System.out.println();
 				
-				final Date registeredFirst = new Date();
+				System.out.println("Now getting account infos...");
+				System.out.println();
 				
-				API.getRegisteredPlayerCount( (registeredPlayerCount) -> {
+				final Date updatedFirst = new Date();
+				
+				user.updateInfos( (response) -> {
 					
-					Date registeredTwo = new Date();
+					Date updatedTwo = new Date();
 					
-					Long diffTwo = Utils.diff(registeredFirst, registeredTwo);
+					Long diffThree = Utils.diff(updatedFirst, updatedTwo);
 					
-					System.out.println("Getted the total registered player count from api was successful. It tooked " + diffTwo + " ms.");
-					
-					System.out.println();
-					System.out.println("registeredPlayerCount : " + registeredPlayerCount);
-					System.out.println();
-					
-					System.out.println("Now getting account infos...");
+					System.out.println("Getted account infos successfully. It tooked " + diffThree + " ms.");
 					System.out.println();
 					
-					final User user = (User) o;
-					final Date updatedFirst = new Date();
+					for(Entry<String, String> entry : user.getAllInfos().entrySet()) {
+						
+						System.out.println(entry.getKey() + " : " + entry.getValue());
+						
+					}
 					
-					user.updateInfos( (response) -> {
-						
-						Date updatedTwo = new Date();
-						
-						Long diffThree = Utils.diff(updatedFirst, updatedTwo);
-						
-						System.out.println("Getted account infos successfully. It tooked " + diffThree + " ms.");
-						System.out.println();
-						
-						for(Entry<String, String> entry : user.getAllInfos().entrySet()) {
-							
-							System.out.println(entry.getKey() + " : " + entry.getValue());
-							
-						}
-						
-						Main.main(new String[0]);
-						
-					});
+					Main.main(new String[0]);
 					
 				});
 				
+			}, (error) -> {
+				
+				error.printStackTrace();
+				
+			});
+			
+		}, (error) -> {
+			
+			ResponseType response = error.getResponseType();
+			
+			if(response.equals(ResponseType.NO_USER)) {
+				
+				System.out.println("The user name you entered is not found on the database. Please re-check credentials you entered.");
+				
+			} else if(response.equals(ResponseType.WRONG_PASSWORD)) {
+				
+				System.out.println("The password you entered is wrong. Please re-check credentials you entered.");
+				
+			} else if(response.equals(ResponseType.MAX_TRIES)) {
+				
+				System.out.println("You have exceeded the maximum wrong password limit. You have to wait three minutes.");
+				
+			} else if(response.equals(ResponseType.ERROR)) {
+				
+				System.out.println("The web server returned a error status. Maybe the web server under maintenance. Please retry later.");
+				
 			} else {
 				
-				System.out.println("An error occured when validating account credentials you entered. The web server's response is: " + String.valueOf(o));
+				System.out.println("An error occured when validating your account from web server. Maybe the web server is down. Please retry later.");
 				
 			}
 			

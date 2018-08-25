@@ -187,11 +187,13 @@ public final class User {
 	}
 	
 	/**
-	 * Gets all infos as ConcurrentHashMap<String, Double>.
+	 * Gets all infos as ConcurrentHashMap<String, String>.
 	 */
 	public final ConcurrentHashMap<String, String> getAllInfos() {
 		
 		ConcurrentHashMap<String, String> map = new ConcurrentHashMap<String, String>();
+		
+		map.clear();
 		
 		map.put("islandLevel", Utils.formatValue(getIslandLevel()));
 		map.put("money", Utils.formatValue(getMoney()));

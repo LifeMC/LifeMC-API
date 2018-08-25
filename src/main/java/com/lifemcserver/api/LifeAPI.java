@@ -1,7 +1,6 @@
 package com.lifemcserver.api;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,84 +30,6 @@ public final class LifeAPI {
 	 * The user cache map to store users.
 	 */
 	protected ConcurrentHashMap<String, User> userMap = new ConcurrentHashMap<String, User>();
-	
-	/**
-	 * Initializes the LifeAPI
-	 */
-	public LifeAPI() {
-		
-		if(instance != null) {
-			throw new IllegalStateException("Only one instance allowed for LifeAPI.");
-		}
-		
-		if(firstTime) {
-			
-			apiThread = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setPriority(Thread.MAX_PRIORITY).setNameFormat("LifeAPI - API Thread").build());
-			
-			firstTime = false;
-			
-			try {
-				// for loading classes at startup - makes it faster when requesting first time.
-				Class.forName("java.lang.String");
-				Class.forName("com.lifemcserver.api.LifeAPI");
-				Class.forName("com.lifemcserver.api.ResponseType");
-				Class.forName("com.lifemcserver.api.User");
-				Class.forName("java.net.URL");
-				Class.forName("javax.net.ssl.HttpsURLConnection");
-				Class.forName("java.io.InputStream");
-				Class.forName("java.io.BufferedInputStream");
-				Class.forName("java.lang.StringBuilder");
-				Class.forName("java.io.BufferedReader");
-				Class.forName("java.lang.Integer");
-				Class.forName("java.lang.Double");
-				Class.forName("java.lang.Math");
-				Class.forName("java.text.DecimalFormat");
-				Class.forName("java.text.DecimalFormatSymbols");
-				Class.forName("java.util.Locale");
-				Class.forName("com.lifemcserver.api.Utils");
-			} catch(Throwable throwable) { throwable.printStackTrace(); }
-			
-			try {
-				
-				// initialize the most used URL's for caching.
-				ArrayList<URL> uriList = new ArrayList<URL>();
-				
-				uriList.add(new URL("https://www.lifemcserver.com/registeredPlayerCount.php"));
-				uriList.add(new URL("https://www.lifemcserver.com/loginAPI.php"));
-				uriList.add(new URL("https://www.lifemcserver.com/loginAPI.php?demo&password=demo"));
-				uriList.add(new URL("https://www.lifemcserver.com/API.php"));
-				uriList.add(new URL("https://www.lifemcserver.com/API.php?demo&password=demo"));
-				
-				int addedIndex = 0;
-				for(URL url : uriList) {
-					
-					Utils.urlCache.put(url.toString(), url);
-					addedIndex++;
-					
-				}
-				
-				if(addedIndex < 5 || Utils.urlCache.size() < 5) {
-					
-					throw new IllegalStateException("Failed to initialize URI's for caching!");
-					
-				}
-				
-				apiThread.execute( () -> {
-					try {
-						// for initializing http client for caching. - makes it faster when using first time.
-						Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
-						
-						// initialize the default demo account for caching.
-						this.getUserBlocking("demo", "demo");
-					} catch(Throwable throwable) { throwable.printStackTrace(); }
-				});
-			} catch(Throwable throwable) { throwable.printStackTrace(); }
-			
-			instance = this;
-			
-		}
-		
-	}
 	
 	/**
 	 * Initializes the LifeAPI with the given thread pool size.
@@ -152,35 +73,51 @@ public final class LifeAPI {
 			try {
 				
 				// initialize the most used URL's for caching.
-				ArrayList<URL> uriList = new ArrayList<URL>();
 				
-				uriList.add(new URL("https://www.lifemcserver.com/registeredPlayerCount.php"));
-				uriList.add(new URL("https://www.lifemcserver.com/loginAPI.php"));
-				uriList.add(new URL("https://www.lifemcserver.com/loginAPI.php?demo&password=demo"));
-				uriList.add(new URL("https://www.lifemcserver.com/API.php"));
-				uriList.add(new URL("https://www.lifemcserver.com/API.php?demo&password=demo"));
+				Utils.urlCache.put("https://www.lifemcserver.com/registeredPlayerCount.php",
+								   new URL("https://www.lifemcserver.com/registeredPlayerCount.php"));
 				
-				int addedIndex = 0;
-				for(URL url : uriList) {
-					
-					Utils.urlCache.put(url.toString(), url);
-					addedIndex++;
-					
-				}
+				Utils.urlCache.put("https://www.lifemcserver.com/loginAPI.php",
+						   new URL("https://www.lifemcserver.com/loginAPI.php"));
 				
-				if(addedIndex < 5 || Utils.urlCache.size() < 5) {
-					
-					throw new IllegalStateException("Failed to initialize URI's for caching!");
-					
-				}
+				Utils.urlCache.put("https://www.lifemcserver.com/loginAPI.php?demo&password=demo",
+						   new URL("https://www.lifemcserver.com/loginAPI.php?demo&password=demo"));
 				
+				Utils.urlCache.put("https://www.lifemcserver.com/API.php",
+						   new URL("https://www.lifemcserver.com/API.php"));
+				
+				Utils.urlCache.put("https://www.lifemcserver.com/API.php?demo&password=demo",
+						   new URL("https://www.lifemcserver.com/API.php?demo&password=demo"));
+							
 				apiThread.execute( () -> {
 					try {
 						// for initializing http client for caching. - makes it faster when using first time.
 						Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
 						
 						// initialize the default demo account for caching.
-						this.getUserBlocking("demo", "demo");
+						this.getUser("demo", "demo", (user) -> {
+							
+							user.updateInfos((response) -> {
+								
+								if(response.equals(ResponseType.SUCCESS)) {
+									
+									User u = this.getUser("demo");
+									
+									if(u == null) {
+										
+										throw new NullPointerException("Error occured when creating demo account!");
+										
+									}
+									
+								}
+								
+							});
+							
+						}, (error) -> {
+							
+							error.getError().printStackTrace();
+							
+						});
 					} catch(Throwable throwable) { throwable.printStackTrace(); }
 				});
 			} catch(Throwable throwable) { throwable.printStackTrace(); }
@@ -188,6 +125,15 @@ public final class LifeAPI {
 			instance = this;
 			
 		}
+		
+	}
+	
+	/**
+	 * Initializes the LifeAPI
+	 */
+	public LifeAPI() {
+		
+		this(Runtime.getRuntime().availableProcessors());
 		
 	}
 		
@@ -214,9 +160,12 @@ public final class LifeAPI {
 	 * @param String name - The user name.
 	 * @param String password - The password of the user.
 	 * 
-	 * @returns (Object) ResponseType response - if any errors occured.
-	 * @returns (Object) User u - if validation successed and user object created successfully.
+	 * @return (Object) ResponseType response - if any errors occured.
+	 * @return (Object) User u - if validation successed and user object created successfully.
+	 * 
+	 * @deprecated Please use {@link com.lifemcserver.api.LifeAPI#getUser(String, String, Consumer, Consumer) getUser(Username, Password, Consumer success, Consumer error)}.
 	 */
+	@Deprecated
 	public final void getUser(final String name, final String password, final Consumer<Object> consumer) {
 		
 		apiThread.execute( () -> {
@@ -303,88 +252,99 @@ public final class LifeAPI {
 	 * The method returns the already initialized user from the cache.
 	 * If user is not initialized / created or it's not found in the cache,
 	 * The method creates a new user object and returns it.
-	 * The method return type is Object.
-	 * So, you MUST check if the response from method is instanceof User.
 	 * 
 	 * @param String name - The user name.
 	 * @param String password - The password of the user.
 	 * 
-	 * @returns (Object) ResponseType response - if any errors occured.
-	 * @returns (Object) User u - if validation successed and user object created successfully.
+	 * @param Consumer<User> success - Callback, called when non-null user is returned.
+	 * @param Consumer<ApiResponse> error - Callback, called when any errors occur.
+	 * 
 	 */
-	private final Object getUserBlocking(final String name, final String password) {
+	public final void getUser(final String name, final String password, final Consumer<User> success, final Consumer<ApiResponse> error) {
 		
-		if(userMap.containsKey(name)) {
-			
-			return userMap.get(name);
-			
-		} else {
+		apiThread.execute( () -> {
 			
 			String jsonResponse = "";
 			
 			try {
 				
-				jsonResponse = Utils.connectTo("https://www.lifemcserver.com/loginAPI.php?" + name + "&password=" + password);
+				if(userMap.containsKey(name)) {
+					
+					success.accept(userMap.get(name));
+					
+				} else {
+										
+					try {
+						
+						jsonResponse = Utils.connectTo("https://www.lifemcserver.com/loginAPI.php?" + name + "&password=" + password);
+						
+					} catch(Exception ex) {
+						
+						ex.printStackTrace();
+						
+					} catch(Throwable tw) {
+						
+						tw.printStackTrace();
+						
+					}
+					
+					ResponseType response = null;
+					
+					if(jsonResponse.equalsIgnoreCase("NO_USER")) {
+						
+						response = ResponseType.NO_USER;
+						error.accept(new ApiResponse(jsonResponse, response, new IllegalStateException("No user found with the given name!")));
+						
+					}
+					
+					else if(jsonResponse.equalsIgnoreCase("WRONG_PASSWORD")) {
+						
+						response = ResponseType.WRONG_PASSWORD;
+						error.accept(new ApiResponse(jsonResponse, response, new IllegalStateException("Wrong password!")));
+						
+					}
+					
+					else if(jsonResponse.equalsIgnoreCase("MAX_TRIES")) {
+						
+						response = ResponseType.MAX_TRIES;
+						error.accept(new ApiResponse(jsonResponse, response, new IllegalStateException("Max tries reached!")));
+						
+					}
+					
+					else if(jsonResponse.equalsIgnoreCase("ERROR")) {
+						
+						response = ResponseType.ERROR;
+						error.accept(new ApiResponse(jsonResponse, response, new IllegalStateException("Error response from API! Error: " + response)));
+						
+					}
+					
+					else if(jsonResponse.equalsIgnoreCase("SUCCESS")) {
+						
+						response = ResponseType.SUCCESS;
+						
+					}
+					
+					else {
+						
+						response = ResponseType.UNKNOWN;
+						error.accept(new ApiResponse(jsonResponse, response, new IllegalStateException("Unknown response from API!")));
+						
+					}
+					
+					User u = new User(name, password);
+					userMap.put(name, u);
+					
+					success.accept(u);
+					
+				}	
 				
-			} catch(Exception ex) {
+			} catch(Throwable throwable) {
 				
-				ex.printStackTrace();
-				
-			} catch(Throwable tw) {
-				
-				tw.printStackTrace();
+				error.accept(new ApiResponse(jsonResponse, ResponseType.UNKNOWN, throwable));
 				
 			}
 			
-			ResponseType response = null;
-			
-			if(jsonResponse.equalsIgnoreCase("NO_USER")) {
-				
-				response = ResponseType.NO_USER;
-				return response;
-				
-			}
-			
-			else if(jsonResponse.equalsIgnoreCase("WRONG_PASSWORD")) {
-				
-				response = ResponseType.WRONG_PASSWORD;
-				return response;
-				
-			}
-			
-			else if(jsonResponse.equalsIgnoreCase("MAX_TRIES")) {
-				
-				response = ResponseType.MAX_TRIES;
-				return response;
-				
-			}
-			
-			else if(jsonResponse.equalsIgnoreCase("ERROR")) {
-				
-				response = ResponseType.ERROR;
-				return response;
-				
-			}
-			
-			else if(jsonResponse.equalsIgnoreCase("SUCCESS")) {
-				
-				response = ResponseType.SUCCESS;
-				
-			}
-			
-			else {
-				
-				response = ResponseType.UNKNOWN;
-				return response;
-				
-			}
-			
-			User u = new User(name, password);
-			userMap.put(name, u);
-			
-			return u;
-			
-		}
+		});
 		
 	}
 	
@@ -398,8 +358,8 @@ public final class LifeAPI {
 	 * 
 	 * @param String name - The user name of the cached user.
 	 * 
-	 * @returns User - if success
-	 * @returns null - if user not found in the cache
+	 * @return User - if success
+	 * @return null - if user not found in the cache
 	 */
 	public final User getUser(final String name) {
 
@@ -421,7 +381,10 @@ public final class LifeAPI {
 	 * 
 	 * @return Integer - Registered player count
 	 * @return null - If any connection issues occured
+	 * 
+	 * @deprecated Use {@link com.lifemcserver.api.LifeAPI#getRegisteredPlayerCount(Consumer, Consumer) getRegisteredPlayerCount(Consumer<Integer>, Consumer<Throwable>)}.
 	 */
+	@Deprecated
 	public final void getRegisteredPlayerCount(final Consumer<Integer> consumer) {
 		
 		apiThread.execute( () -> {
@@ -450,6 +413,35 @@ public final class LifeAPI {
 			} else {
 				
 				consumer.accept(null);
+				
+			}
+			
+		});
+		
+	}
+	
+	/**
+	 * Gets the current registered player count of the LifeMC.
+	 * May be null, so you should always check != null.
+	 * 
+	 * @return Integer - Registered player count
+	 * @return null - If any connection issues occured
+	 * 
+	 */
+	public final void getRegisteredPlayerCount(final Consumer<Integer> consumer, final Consumer<Throwable> error) {
+		
+		apiThread.execute( () -> {
+			
+			try {
+				
+				String response = Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
+				
+				Integer playerCount = Utils.convertToInteger(response);
+				consumer.accept(playerCount);
+				
+			} catch(Throwable tw) {
+				
+				error.accept(tw);
 				
 			}
 			

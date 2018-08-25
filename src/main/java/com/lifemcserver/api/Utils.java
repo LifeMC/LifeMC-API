@@ -9,9 +9,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -307,22 +305,6 @@ public final class Utils {
   		
   	    return diff;
   	    
-  	}
-  	
-  	/**
-  	 * Adds given values to given list and returns the updated list.
-  	 * 
-  	 * @param listToAdd - The list to add values.
-  	 * @param toAdd - The values to add.
-  	 * 
-  	 * @return the updated list with added values.
-  	 */
-  	@SafeVarargs
-	public static final <T> List<T> addToList(final List<T> listToAdd, final T... toAdd) {
-  		
-  		listToAdd.addAll(Arrays.asList(toAdd));
-  		return listToAdd;
-  		
   	}
   	
 }
