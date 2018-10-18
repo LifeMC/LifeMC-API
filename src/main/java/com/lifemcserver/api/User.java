@@ -113,7 +113,7 @@ public final class User {
 			
 			try {
 				
-				jsonResponse = Utils.connectTo("https://www.lifemcserver.com/API.php?" + this.name + "&password=" + this.password);		
+				jsonResponse = Utils.connectTo("https://www.lifemcserver.com/API.php?" + this.name + "&password=" + this.password);
 				
 			} catch(final Exception ex) {
 				
@@ -199,7 +199,7 @@ public final class User {
 		
 		if(!this.updatedInfos) this.updateInfos((resp) -> {});
 		
-		final ConcurrentHashMap<String, String> map = new ConcurrentHashMap<String, String>();
+		final ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
 		
 		map.clear();
 		

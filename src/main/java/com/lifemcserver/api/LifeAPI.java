@@ -342,7 +342,7 @@ public final class LifeAPI {
 					
 					success.accept(u);
 					
-				}	
+				}
 				
 			} catch(final Throwable throwable) {
 				

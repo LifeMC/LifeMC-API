@@ -211,7 +211,7 @@ public final class Utils {
 			con.setRequestProperty("Content-Type", "application/json");
 			con.setRequestProperty("Accept", "application/json");
 			con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36");
-		    con.setRequestProperty("Referer", "https://www.lifemcserver.com/forum/");	
+		    con.setRequestProperty("Referer", "https://www.lifemcserver.com/forum/");
 		    
 		    in = new BufferedInputStream(con.getInputStream());
 		    final String encoding = con.getContentEncoding();
@@ -305,7 +305,7 @@ public final class Utils {
   		
   		if(dateOne.getTime() > dateTwo.getTime()) {
   			
-  			diff = Math.abs(dateOne.getTime() - dateTwo.getTime());	
+  			diff = Math.abs(dateOne.getTime() - dateTwo.getTime());
   			
   		} else {
   			
