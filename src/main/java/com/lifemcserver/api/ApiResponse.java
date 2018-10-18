@@ -1,5 +1,10 @@
 package com.lifemcserver.api;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public final class ApiResponse {
 	
 	private final String actualResponse;
@@ -58,7 +63,7 @@ public final class ApiResponse {
 		
 		if(this.errors == null) {
 			
-			return new NullPointerException("No errors defined!");
+			return null;
 			
 		}
 		
@@ -68,7 +73,47 @@ public final class ApiResponse {
 			
 		} else {
 			
-			return new ArrayIndexOutOfBoundsException("No errors found!");
+			return null;
+			
+		}
+		
+	}
+	
+	public final void handleError() {
+		
+		if(this.getError() != null) {
+			
+			this.getError().printStackTrace();
+			
+		}
+		
+	}
+	
+	public final void handleError(final PrintWriter pw) {
+		
+		if(this.getError() != null) {
+			
+			this.getError().printStackTrace(pw);
+			
+		}
+		
+	}
+	
+	public final void handleError(final PrintStream ps) {
+		
+		if(this.getError() != null) {
+			
+			this.getError().printStackTrace(ps);
+			
+		}
+		
+	}
+	
+	public final void handleError(final Logger logger) {
+		
+		if(this.getError() != null) {
+			
+			logger.log(Level.SEVERE, this.actualResponse, this.getError());
 			
 		}
 		

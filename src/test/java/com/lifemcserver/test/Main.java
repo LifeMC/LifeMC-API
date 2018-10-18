@@ -20,11 +20,11 @@ public final class Main {
 		
 		System.out.print("Enter your username (you can enter \"demo\" for testing): ");
 		
-		String userName = scan.next();
+		final String userName = scan.next();
 		
 		System.out.print("Enter your password (you can enter \"demo\" for testing): ");
 		
-		String password = scan.next();
+		final String password = scan.next();
 
 		System.out.println("Please wait when validating credentials you entered...");
 		
@@ -32,9 +32,9 @@ public final class Main {
 		
 		API.getUser(userName, password, (user) -> {
 			
-			Date validateTwo = new Date();
+			final Date validateTwo = new Date();
 			
-			Long diff = Utils.diff(validateFirst, validateTwo);
+			final Long diff = Utils.diff(validateFirst, validateTwo);
 			
 			System.out.println();
 			System.out.println("Successfully validated your account. It tooked " + diff + " ms. Welcome! ;)");
@@ -45,9 +45,9 @@ public final class Main {
 			
 			API.getRegisteredPlayerCount( (registeredPlayerCount) -> {
 				
-				Date registeredTwo = new Date();
+				final Date registeredTwo = new Date();
 				
-				Long diffTwo = Utils.diff(registeredFirst, registeredTwo);
+				final Long diffTwo = Utils.diff(registeredFirst, registeredTwo);
 				
 				System.out.println("Getted the total registered player count from api was successful. It tooked " + diffTwo + " ms.");
 				
@@ -62,14 +62,14 @@ public final class Main {
 				
 				user.updateInfos( (response) -> {
 					
-					Date updatedTwo = new Date();
+					final Date updatedTwo = new Date();
 					
-					Long diffThree = Utils.diff(updatedFirst, updatedTwo);
+					final Long diffThree = Utils.diff(updatedFirst, updatedTwo);
 					
 					System.out.println("Getted account infos successfully. It tooked " + diffThree + " ms.");
 					System.out.println();
 					
-					for(Entry<String, String> entry : user.getAllInfos().entrySet()) {
+					for(final Entry<String, String> entry : user.getAllInfos().entrySet()) {
 						
 						System.out.println(entry.getKey() + " : " + entry.getValue());
 						
@@ -87,7 +87,7 @@ public final class Main {
 			
 		}, (error) -> {
 			
-			ResponseType response = error.getResponseType();
+			final ResponseType response = error.getResponseType();
 			
 			if(response.equals(ResponseType.NO_USER)) {
 				

@@ -1,11 +1,12 @@
 package com.lifemcserver.api;
 
 import java.net.URL;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public final class LifeAPI {
@@ -29,7 +30,8 @@ public final class LifeAPI {
 	/**
 	 * The user cache map to store users.
 	 */
-	protected ConcurrentHashMap<String, User> userMap = new ConcurrentHashMap<String, User>();
+	protected Cache<String, User> userCache = CacheBuilder.newBuilder()
+			.build();
 	
 	/**
 	 * Initializes the LifeAPI with the given thread pool size.
@@ -68,7 +70,7 @@ public final class LifeAPI {
 				Class.forName("java.text.DecimalFormatSymbols");
 				Class.forName("java.util.Locale");
 				Class.forName("com.lifemcserver.api.Utils");
-			} catch(Throwable throwable) { throwable.printStackTrace(); }
+			} catch(final Throwable throwable) { throwable.printStackTrace(); }
 			
 			try {
 				
@@ -101,7 +103,7 @@ public final class LifeAPI {
 								
 								if(response.equals(ResponseType.SUCCESS)) {
 									
-									User u = this.getUser("demo");
+									final User u = this.getUser("demo");
 									
 									if(u == null) {
 										
@@ -118,9 +120,9 @@ public final class LifeAPI {
 							error.getError().printStackTrace();
 							
 						});
-					} catch(Throwable throwable) { throwable.printStackTrace(); }
+					} catch(final Throwable throwable) { throwable.printStackTrace(); }
 				});
-			} catch(Throwable throwable) { throwable.printStackTrace(); }
+			} catch(final Throwable throwable) { throwable.printStackTrace(); }
 			
 			instance = this;
 			
@@ -170,9 +172,11 @@ public final class LifeAPI {
 		
 		apiThread.execute( () -> {
 			
-			if(userMap.containsKey(name)) {
+			final User cachedUser = this.userCache.getIfPresent(name);
+			
+			if(cachedUser != null) {
 				
-				consumer.accept(userMap.get(name));
+				consumer.accept(cachedUser);
 				
 			} else {
 				
@@ -182,11 +186,11 @@ public final class LifeAPI {
 					
 					jsonResponse = Utils.connectTo("https://www.lifemcserver.com/loginAPI.php?" + name + "&password=" + password);
 					
-				} catch(Exception ex) {
+				} catch(final Exception ex) {
 					
 					ex.printStackTrace();
 					
-				} catch(Throwable tw) {
+				} catch(final Throwable tw) {
 					
 					tw.printStackTrace();
 					
@@ -235,8 +239,8 @@ public final class LifeAPI {
 					
 				}
 				
-				User u = new User(name, password);
-				userMap.put(name, u);
+				final User u = new User(name, password);
+				this.userCache.put(name, u);
 				
 				consumer.accept(u);
 				
@@ -268,9 +272,11 @@ public final class LifeAPI {
 			
 			try {
 				
-				if(userMap.containsKey(name)) {
+				final User cachedUser = this.userCache.getIfPresent(name);
+				
+				if(cachedUser != null) {
 					
-					success.accept(userMap.get(name));
+					success.accept(cachedUser);
 					
 				} else {
 										
@@ -278,11 +284,11 @@ public final class LifeAPI {
 						
 						jsonResponse = Utils.connectTo("https://www.lifemcserver.com/loginAPI.php?" + name + "&password=" + password);
 						
-					} catch(Exception ex) {
+					} catch(final Exception ex) {
 						
 						ex.printStackTrace();
 						
-					} catch(Throwable tw) {
+					} catch(final Throwable tw) {
 						
 						tw.printStackTrace();
 						
@@ -331,14 +337,14 @@ public final class LifeAPI {
 						
 					}
 					
-					User u = new User(name, password);
-					userMap.put(name, u);
+					final User u = new User(name, password);
+					this.userCache.put(name, u);
 					
 					success.accept(u);
 					
 				}	
 				
-			} catch(Throwable throwable) {
+			} catch(final Throwable throwable) {
 				
 				error.accept(new ApiResponse(jsonResponse, ResponseType.UNKNOWN, throwable));
 				
@@ -362,16 +368,8 @@ public final class LifeAPI {
 	 * @return null - if user not found in the cache
 	 */
 	public final User getUser(final String name) {
-
-		if(userMap.containsKey(name)) {
-			
-			return userMap.get(name);
-			
-		} else {
-			
-			return null;
-			
-		}
+		
+		return this.userCache.getIfPresent(name);
 		
 	}
 	
@@ -395,11 +393,11 @@ public final class LifeAPI {
 				
 				response = Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
 				
-			} catch(Exception ex) {
+			} catch(final Exception ex) {
 				
 				ex.printStackTrace();
 				
-			} catch(Throwable tw) {
+			} catch(final Throwable tw) {
 				
 				tw.printStackTrace();
 				
@@ -407,7 +405,7 @@ public final class LifeAPI {
 			
 			if(response != null) {
 				
-				Integer playerCount = Utils.convertToInteger(response);
+				final Integer playerCount = Utils.convertToInteger(response);
 				consumer.accept(playerCount);
 				
 			} else {
@@ -434,12 +432,12 @@ public final class LifeAPI {
 			
 			try {
 				
-				String response = Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
+				final String response = Utils.connectTo("https://www.lifemcserver.com/registeredPlayerCount.php");
 				
-				Integer playerCount = Utils.convertToInteger(response);
+				final Integer playerCount = Utils.convertToInteger(response);
 				consumer.accept(playerCount);
 				
-			} catch(Throwable tw) {
+			} catch(final Throwable tw) {
 				
 				error.accept(tw);
 				

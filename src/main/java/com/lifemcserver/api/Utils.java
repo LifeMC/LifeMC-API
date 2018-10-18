@@ -11,15 +11,24 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+
+/**
+ * Utility class
+ */
 public final class Utils {
 	
-	protected static final ConcurrentHashMap<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
+	private Utils() { throw new UnsupportedOperationException("Utils class contains static methods, do not create instances of it!"); }
+	
+	protected static final Cache<String, URL> urlCache = CacheBuilder.newBuilder()
+			.build();
+	
     private static final DecimalFormatSymbols formatSymbols = new DecimalFormatSymbols( Locale.ENGLISH );
 	
 	static {
@@ -32,18 +41,18 @@ public final class Utils {
 	/**
 	 * Formats a number to in-game format.
 	 * 
-	 * @param double d - Any number to format. (you can convert to double using .doubleValue() or convertToDouble(object).)
-	 * @return String val - The formatted value of the given number.
+	 * @param d - Any number to format. (you can convert to double using .doubleValue() or convertToDouble(object).)
+	 * @return val - The formatted value of the given number.
 	 */
     public static final String formatValue(final double d) {
     	
-        boolean isWholeNumber = d == Math.round( d );
+        final boolean isWholeNumber = d == Math.round( d );
                 
         formatSymbols.setDecimalSeparator( '.' );
         
-        String pattern = isWholeNumber ? "###,###.###" : "###,##0.00";
+        final String pattern = isWholeNumber ? "###,###.###" : "###,##0.00";
         
-        DecimalFormat df = new DecimalFormat( pattern, formatSymbols );
+        final DecimalFormat df = new DecimalFormat( pattern, formatSymbols );
         
         return df.format( d );
         
@@ -52,7 +61,7 @@ public final class Utils {
 	/**
 	 * Converts any object to integer. If object doesn't represent an int, throws a IllegalArgumentException.
 	 * 
-	 * @param Object obj - Any object to convert.
+	 * @param obj - Any object to convert.
 	 * @return Integer - The integer value of the given object.
 	 * 
 	 * @throws IllegalArgumentException - If given object doesn't represents an Integer.
@@ -81,7 +90,7 @@ public final class Utils {
 				  
 			  } else {
 				  
-				  String toString = obj.toString();
+				  final String toString = obj.toString();
 				  
 			      if (toString.matches("-?\\d+")) {
 			    	  
@@ -93,12 +102,12 @@ public final class Utils {
 			      
 			  }
 			  
-		  } catch(NumberFormatException ex) {
+		  } catch(final NumberFormatException ex) {
 			  
 			  ex.printStackTrace();
 			  return 0;
 			  
-		  } catch(Exception ex) {
+		  } catch(final Exception ex) {
 			  
 			  ex.printStackTrace();
 			  return 0;
@@ -110,7 +119,7 @@ public final class Utils {
 	/**
 	 * Converts any object to double. If object doesn't represent a double, throws a IllegalArgumentException.
 	 * 
-	 * @param Object obj - Any object to convert.
+	 * @param obj - Any object to convert.
 	 * @return Double - The double value of the given object.
 	 * 
 	 * @throws IllegalArgumentException - If given object doesn't represents an Double.
@@ -147,12 +156,12 @@ public final class Utils {
 				  
 			  }
 			  
-		  } catch(NumberFormatException ex) {
+		  } catch(final NumberFormatException ex) {
 			  
 			  ex.printStackTrace();
 			  return 0.0;
 			  
-		  } catch(Exception ex) {
+		  } catch(final Exception ex) {
 			  
 			  ex.printStackTrace();
 			  return 0.0;
@@ -164,8 +173,8 @@ public final class Utils {
 	/**
 	 * Connects a URL and gets the response. The url must be starting with https://.
 	 * 
-	 * @param final String address - The URL of the web server.
-	 * @return String response - The response from the web server.
+	 * @param address - The URL of the web server.
+	 * @return response - The response from the web server.
 	 */
 	public static final String connectTo(final String address) {
 		
@@ -176,10 +185,11 @@ public final class Utils {
 		try {
 			
 			URL url = null;
+			final URL cachedURL = urlCache.getIfPresent(address);
 			
-			if(urlCache.containsKey(address)) {
+			if(cachedURL != null) {
 				
-				url = urlCache.get(address);
+				url = cachedURL;
 				
 			}
 			
@@ -190,7 +200,7 @@ public final class Utils {
 				
 			}
 			
-			URLConnection con = url.openConnection();
+			final URLConnection con = url.openConnection();
 			
 			con.setAllowUserInteraction(false);
 			con.setDoOutput(false);
@@ -204,7 +214,7 @@ public final class Utils {
 		    con.setRequestProperty("Referer", "https://www.lifemcserver.com/forum/");	
 		    
 		    in = new BufferedInputStream(con.getInputStream());
-		    String encoding = con.getContentEncoding();
+		    final String encoding = con.getContentEncoding();
 		    
 		    if (encoding != null) {
 		    	
@@ -220,7 +230,7 @@ public final class Utils {
 		    	
 			}
 		    
-			StringBuilder responseBody = new StringBuilder();
+			final StringBuilder responseBody = new StringBuilder();
 		    br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 		    
 		    String line = "";
@@ -241,7 +251,7 @@ public final class Utils {
 			
 			return response;
 			
-		} catch(Throwable throwable) { throwable.printStackTrace(); return response; }
+		} catch(final Throwable throwable) { throwable.printStackTrace(); return response; }
 		finally {
 			
 			if(in != null) {
@@ -250,7 +260,7 @@ public final class Utils {
 					
 					in.close();
 					
-				} catch (IOException e) {
+				} catch (final IOException e) {
 					
 					e.printStackTrace();
 					
@@ -264,7 +274,7 @@ public final class Utils {
 					
 					br.close();
 					
-				} catch (IOException e) {
+				} catch (final IOException e) {
 					
 					e.printStackTrace();
 					

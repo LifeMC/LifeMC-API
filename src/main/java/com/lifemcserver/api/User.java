@@ -3,22 +3,22 @@ package com.lifemcserver.api;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import javax.annotation.CheckReturnValue;
-
 import org.json.JSONObject;
 
 public final class User {
-
+	
 	private volatile String name = "demo";
 	private volatile String password = "demo";
 	
-	private volatile int islandLevel;
+	private volatile int islandLevel = 0;
 	private volatile String money = "0.00";
-	private volatile int credit;
-	private volatile int ironsps;
-	private volatile int diasps;
-	private volatile int profileLike;
+	private volatile int credit = 0;
+	private volatile int ironsps = 0;
+	private volatile int diasps = 0;
+	private volatile int profileLike = 0;
 	private volatile String profileFollow = "-1";
+	
+	private volatile boolean updatedInfos = false;
 	
 	/**
 	 * Creates a user object with the given user name and password.
@@ -49,7 +49,7 @@ public final class User {
 	 * @param profileLike - The profile like count of the user.
 	 * @param profileFollow - The profile follower count of the user.
 	 */
-	public User(final String name, final String password, final int islandLevel, String money, final int credit, final int ironsps, final int diasps, final int profileLike, String profileFollow) {
+	public User(final String name, final String password, final int islandLevel, final String money, final int credit, final int ironsps, final int diasps, final int profileLike, final String profileFollow) {
 		
 		this.name = name;
 		this.password = password;
@@ -70,7 +70,7 @@ public final class User {
 	 */
 	public final String getName() {
 		
-		return name;
+		return this.name;
 		
 	}
 	
@@ -113,13 +113,13 @@ public final class User {
 			
 			try {
 				
-				jsonResponse = Utils.connectTo("https://www.lifemcserver.com/API.php?" + name + "&password=" + password);		
+				jsonResponse = Utils.connectTo("https://www.lifemcserver.com/API.php?" + this.name + "&password=" + this.password);		
 				
-			} catch(Exception ex) {
+			} catch(final Exception ex) {
 				
 				ex.printStackTrace();
 				
-			} catch(Throwable tw) {
+			} catch(final Throwable tw) {
 				
 				tw.printStackTrace();
 				
@@ -170,17 +170,23 @@ public final class User {
 				
 			}
 			
-			JSONObject userInfos = new JSONObject(jsonResponse).getJSONObject("userInfo");
+			final JSONObject userInfos = new JSONObject(jsonResponse).getJSONObject("userInfo");
 			
-			islandLevel = userInfos.getInt("islandLevel");
-			money = userInfos.getString("money");
-			credit = userInfos.getInt("credit");
-			ironsps = userInfos.getInt("ironsps");
-			diasps = userInfos.getInt("diasps");
-			profileLike = userInfos.getInt("profileLike");
-			profileFollow = userInfos.getString("profileFollow");
+			this.islandLevel = userInfos.getInt("islandLevel");
+			this.money = userInfos.getString("money");
+			this.credit = userInfos.getInt("credit");
+			this.ironsps = userInfos.getInt("ironsps");
+			this.diasps = userInfos.getInt("diasps");
+			this.profileLike = userInfos.getInt("profileLike");
+			this.profileFollow = userInfos.getString("profileFollow");
 			
 			consumer.accept(response);
+			
+			if(!this.updatedInfos) {
+				
+				this.updatedInfos = true;
+				
+			}
 			
 		});
 		
@@ -191,17 +197,19 @@ public final class User {
 	 */
 	public final ConcurrentHashMap<String, String> getAllInfos() {
 		
-		ConcurrentHashMap<String, String> map = new ConcurrentHashMap<String, String>();
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
+		
+		final ConcurrentHashMap<String, String> map = new ConcurrentHashMap<String, String>();
 		
 		map.clear();
 		
-		map.put("islandLevel", Utils.formatValue(getIslandLevel()));
-		map.put("money", Utils.formatValue(getMoney()));
-		map.put("credit", Utils.formatValue(getCreditAmount()));
-		map.put("ironsps", Utils.formatValue(getIronSPCount()));
-		map.put("diasps", Utils.formatValue(getDiamondBlockSPCount()));
-		map.put("profileLikes", Utils.formatValue(getProfileLikes()));
-		map.put("profileFollowers", Utils.formatValue(getProfileFollowers()));
+		map.put("islandLevel", Utils.formatValue(this.getIslandLevel()));
+		map.put("money", Utils.formatValue(this.getMoney()));
+		map.put("credit", Utils.formatValue(this.getCreditAmount()));
+		map.put("ironsps", Utils.formatValue(this.getIronSPCount()));
+		map.put("diasps", Utils.formatValue(this.getDiamondBlockSPCount()));
+		map.put("profileLikes", Utils.formatValue(this.getProfileLikes()));
+		map.put("profileFollowers", Utils.formatValue(this.getProfileFollowers()));
 		
 		return map;
 		
@@ -213,6 +221,8 @@ public final class User {
 	 */
 	public final int getIslandLevel() {
 		
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
+		
 		return this.islandLevel;
 		
 	}
@@ -222,6 +232,8 @@ public final class User {
 	 * @return Double money - The money of the user.
 	 */
 	public final double getMoney() {
+		
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
 		
 		return Utils.convertToDouble(this.money);
 		
@@ -233,6 +245,8 @@ public final class User {
 	 */
 	public final int getCreditAmount() {
 		
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
+		
 		return this.credit;
 		
 	}
@@ -242,6 +256,8 @@ public final class User {
 	 * @return Integer ironsps - The iron spawner count of the user.
 	 */
 	public final int getIronSPCount() {
+		
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
 		
 		return this.ironsps;
 		
@@ -253,6 +269,8 @@ public final class User {
 	 */
 	public final int getDiamondBlockSPCount() {
 		
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
+		
 		return this.diasps;
 		
 	}
@@ -262,6 +280,8 @@ public final class User {
 	 * @return Integer profileLike - The profile like count of the user.
 	 */
 	public final int getProfileLikes() {
+		
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
 		
 		return this.profileLike;
 		
@@ -275,7 +295,9 @@ public final class User {
 	 */
 	public final boolean isUsingProfileV2() {
 		
-		return getProfileFollowers() != -1;
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
+		
+		return this.getProfileFollowers() != -1;
 		
 	}
 	
@@ -290,79 +312,9 @@ public final class User {
 	 */
 	public final int getProfileFollowers() {
 		
+		if(!this.updatedInfos) this.updateInfos((resp) -> {});
+		
 		return Utils.convertToInteger(this.profileFollow);
-		
-	}
-	
-	/**
-	 * Formats a number to in-game format.
-	 * @param double d - Any number to format. (you can convert to double using .doubleValue() or convertToDouble(object).)
-	 * @return String val - The formatted value of the given number.
-	 * 
-	 * @deprecated
-	 * Use Utils.formatValue(final double d) instead of this.
-	 * This keeps for backwards compability.
-	 */
-	@CheckReturnValue
-	@Deprecated
-	public static final String formatValue(double d) {
-		
-		return Utils.formatValue(d);
-		
-	}
-	
-	/**
-	 * Converts any object to integer. If object doesn't represent an int, throws a IllegalArgumentException.
-	 * @param Object obj - Any object to convert.
-	 * @return Integer - The integer value of the given object.
-	 * 
-	 * @deprecated
-	 * Use Utils.convertToInteger(final Object obj) instead of this.
-	 * This keeps for backwards compability.
-	 */
-	@CheckReturnValue
-	@Deprecated
-	public static final Integer convertToInteger(Object obj) {
-		
-		return Utils.convertToInteger(obj);
-		
-	}
-	
-	/**
-	 * Converts any object to double. If object doesn't represent a double, throws a IllegalArgumentException.
-	 * @param Object obj - Any object to convert.
-	 * @return Double - The double value of the given object.
-	 * 
-	 * @deprecated
-	 * Use Utils.convertToDouble(final Object obj) instead of this.
-	 * This keeps for backwards compability.
-	 */
-	@CheckReturnValue
-	@Deprecated
-	public static final Double convertToDouble(Object obj) {
-		
-		return Utils.convertToDouble(obj);
-		
-	}
-	
-	/**
-	 * Connects a URL and gets the response. The url must be starting with https://.
-	 * 
-	 * @param final String address - The URL of the web server.
-	 * @return String response - The response from the web server.
-	 * 
-	 * @throws Exception - If any exceptions occured.
-	 * @throws Throwable - If any exceptions occured.
-	 * 
-	 * @deprecated
-	 * Use Utils.connectTo(final String address) instead of this.
-	 * This keeps for backwards compability.
-	 */
-	@CheckReturnValue
-	@Deprecated
-	public static final String connectTo(final String address) throws Exception, Throwable {
-		
-		return Utils.connectTo(address);
 		
 	}
 	
